@@ -1,0 +1,269 @@
+实验：处理机调度算法的实现  （此算法是用C语言实现的）
+
+实验内容：
+
+1．设定系统中有五个进程，每一个进程用一个进程控制块表示。
+
+2．输入每个进程的“优先数”和“要求运行时间”。
+
+3．为了调度方便，将五个进程按给定的优先数从大到小连成就绪队列。用一单元指出队列首进程，用指针指出队列的连接情况。
+
+4．处理机调度总是选队首进程运行。采用动态优先数算法，进程每运行一次优先数就减“1”，同时将运行时间减“1”。
+
+5．若某进程运行时间为零，则将其状态置为“结束”,且退出队列。
+
+运行所设计程序，显示或打印逐次被选中进程的进程名，以及进程控制块的动态变化过程。
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#define PCB_NUM 5
+
+typedef struct {
+	char Pname[5];
+	bool StateEnd;
+	int Prior;
+	int RunTime;
+}PCB;
+
+typedef PCB QueueElementType;		//设节点的数据类型为PCB型 
+
+typedef struct Node {		//定义 链式队列节点类型 
+
+	QueueElementType data;
+	struct Node *next;
+}QueueNode;
+
+typedef struct {		//定义 链式队列数据类型 
+
+	QueueNode *front;
+	QueueNode *rear;
+}LinkQueue;
+
+
+int main(){
+	void NamePCB( LinkQueue Q );
+	LinkQueue sort( LinkQueue Q );
+	void print( LinkQueue Q );
+	void ifEnd( LinkQueue Q );
+	LinkQueue Process( LinkQueue Q );
+	
+	LinkQueue InitQueue();
+	int QueueEmpty(LinkQueue Q);
+	LinkQueue EnQueue(LinkQueue Q,QueueElementType x);
+	LinkQueue DeQueue(LinkQueue Q,QueueElementType *e);
+	QueueElementType GetHead(LinkQueue Q);
+	QueueNode *GetHeadPos(LinkQueue Q);
+	LinkQueue OutQueue(LinkQueue Q);
+	
+	
+	printf("请依次输入%d个进程控制块的优先数和要求运行时间(以空格隔开)：\n",PCB_NUM);
+	LinkQueue Fir;		//创建第一个链队列 
+	Fir = InitQueue();
+	for( int i=0;i<PCB_NUM;i++)		//初始化每一个PCB 
+	{
+		QueueElementType pcb;
+		scanf("%d %d",&pcb.Prior,&pcb.RunTime);
+		pcb.StateEnd = false;
+		Fir = EnQueue(Fir, pcb);
+	}
+	NamePCB(Fir);
+	
+	/*QueueNode *p;		//test line43-52
+	p = GetHeadPos(Fir);
+	printf("优先数\t运行时间\n");
+	for( int i=0; i<PCB_NUM; i++){
+		printf("%s\t%d\t%d\n",p->data.Pname,p->data.Prior,p->data.RunTime);
+		p = p->next;
+	}*/
+	
+		
+	while( !QueueEmpty(Fir) ) {
+	ifEnd(Fir);
+	Fir = OutQueue(Fir);
+		if(!QueueEmpty(Fir)){
+			
+			Fir = sort(Fir);
+			
+			print(Fir);
+			
+			Fir = Process(Fir);
+		}
+	}
+	
+	return 0;
+}
+
+void NamePCB( LinkQueue Q ){		//为每一个PCB命名 
+
+	QueueNode *GetHeadPos(LinkQueue Q);
+	QueueNode *temp = GetHeadPos(Q);
+	int i=0;
+	while( temp )
+	{
+		temp->data.Pname[0]='p';
+		temp->data.Pname[1]='c';
+		temp->data.Pname[2]='b';
+		temp->data.Pname[3]=49+i;
+		temp->data.Pname[4]='\0';
+		
+		temp = temp->next;
+		i++;
+	}
+}
+
+LinkQueue sort( LinkQueue Q ){		//选择排序法，从大到小 
+
+	QueueNode *GetHeadPos(LinkQueue Q);
+	LinkQueue EnQueue(LinkQueue Q,QueueElementType x);
+	LinkQueue DeQueue(LinkQueue Q,QueueElementType *e);
+	LinkQueue InitQueue();
+	int QueueEmpty(LinkQueue Q);
+	LinkQueue Sec = InitQueue();		//构建第二个链队列 
+	
+	while( !QueueEmpty(Q) ){
+		QueueNode *temp=GetHeadPos(Q);
+		QueueNode *p = temp; 		//用p来定位此时Prior最大的元素地址 
+		int Pmax = p->data.Prior;		//找出最大的优先数 
+		while( temp ){
+			if( (temp->data.Prior)>Pmax ){
+				p=temp;
+				Pmax=temp->data.Prior;
+				temp = temp->next;
+			}else{
+				temp = temp->next;
+			}
+		}
+		Sec = EnQueue(Sec, p->data);
+		Q = DeQueue(Q, &(p->data));
+	}
+	return Sec;
+}
+
+void print( LinkQueue Q ) {		//输出每轮队首的PCB信息 
+
+	QueueElementType GetHead(LinkQueue Q);
+	int QueueEmpty(LinkQueue Q);
+//	if( !QueueEmpty(Q) ){
+		printf("\n进程名\t优先数\t运行时间\n");
+		printf("%s\t",GetHead(Q).Pname);		
+		printf("%d\t",GetHead(Q).Prior);
+		printf("%d\n",GetHead(Q).RunTime);
+//	}
+}
+
+void ifEnd( LinkQueue Q ) {		//设置PCB的状态->TRUE or FALSE 
+
+	QueueNode *GetHeadPos(LinkQueue Q);
+	QueueNode *temp=GetHeadPos(Q);	
+	while( temp ){
+		if( (temp->data.RunTime)<=0 ){
+			temp->data.StateEnd = true;
+			temp = temp->next;
+		}else{
+			temp = temp->next;
+		}
+	}
+}
+
+LinkQueue Process( LinkQueue Q ) {
+	QueueNode *GetHeadPos(LinkQueue Q);
+	QueueNode *temp=GetHeadPos(Q);	
+	temp->data.Prior --;
+	temp->data.RunTime --;
+	return Q;
+}
+
+LinkQueue OutQueue(LinkQueue Q) {		//让状态为end的PCB退出链队列
+
+	LinkQueue DeQueue(LinkQueue Q,QueueElementType *e);
+	QueueNode *GetHeadPos(LinkQueue Q);
+	QueueNode *temp=GetHeadPos(Q);
+	while(temp){
+		if( temp->data.StateEnd ){
+			Q = DeQueue(Q, &(temp->data));	
+			break;
+		}else{
+			temp = temp->next;
+		}
+	}
+	return Q;
+}
+
+/*---------------以下是链式队列的基本运算-----------------*/
+
+LinkQueue InitQueue() {		/*链式队列初始化*/
+
+	LinkQueue Q;
+	QueueNode *p;
+	p=(QueueNode *)malloc(sizeof(QueueNode));		//申请头结点存储空间 
+	if( p ) {
+		Q.front = Q.rear = p;
+		Q.front->next = NULL;		//头结点指针域置空
+		return Q; 
+	}else{
+		printf("初始化失败，程序运行终止！\n");
+		exit(0);
+	}
+}
+
+int QueueEmpty(LinkQueue Q) {		/*判断链式队列是否为空*/
+
+	return (Q.front ==Q.rear)?1:0;		//队空返回1，非空返回0 
+}
+
+LinkQueue EnQueue(LinkQueue Q, QueueElementType x) {		/*链式队列入队操作*/
+
+	QueueNode *p;
+	p=(QueueNode *)malloc(sizeof(QueueNode));		//申请头结点存储空间 
+	if(!p) {
+		printf("申请队列节点空间失败，程序运行终止！\n");
+		exit(0);
+	}else{
+		p->data = x;
+		p->next = NULL;
+		Q.rear->next = p;
+		Q.rear = p;
+		return Q;
+	}
+}
+
+LinkQueue DeQueue(LinkQueue Q,QueueElementType *e) {		/*链队列出队操作*/
+
+	QueueNode *p;
+	if(QueueEmpty(Q)) {
+		printf("队列为空，出队操作失败！\n");
+	}else{
+		p = Q.front->next;		//p指向队头节点 
+		*e = p->data;		//队头元素通过实参返回 
+		Q.front->next = p->next;		//删除队头节点 
+		if( Q.rear==p ){		//若p是队中最后一个节点，出队后队列置空 
+    
+			Q.rear = Q.front;
+		}
+		free(p);		//释放出队节点所分配的存储空间 
+	}
+	return Q;
+}
+ 
+QueueElementType GetHead(LinkQueue Q) {		//取队头元素 
+
+	if( QueueEmpty(Q) ){
+		printf("空队，读取队头元素失败！\n");
+		exit(0);
+	}else{
+		return ( Q.front->next->data);
+	}
+}
+
+QueueNode *GetHeadPos(LinkQueue Q) {
+	if( QueueEmpty(Q) ){
+		printf("空队，读取队头元素位置失败！\n");
+		return 0;
+	}else{
+		return ( Q.front->next );
+	}
+}
+
+
+
