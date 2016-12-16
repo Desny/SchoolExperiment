@@ -1,0 +1,213 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define ALLSIZE 50		//设定存储空间的总容量 
+
+typedef struct Content {
+	int size;
+	int num;
+	int full;
+}Con;
+
+typedef Con ElemType;
+
+typedef struct DuLnode {		//双向链表节点定义 
+	ElemType data;
+	struct DuLnode *prior, *next;
+}DuLnode; 
+
+typedef DuLnode *DuLinkList;		//指向双向链表节点的指针类型 
+
+int main() {
+	DuLinkList Create_Dul();
+	DuLinkList ListInsert_Dul(DuLinkList L, ElemType x);
+	DuLinkList ListDelete_Dul(DuLinkList L, int i);
+	DuLinkList FF(DuLinkList L, int size);
+	DuLinkList deptInsert(DuLinkList L, int i, int size);
+	DuLinkList Release(DuLinkList L, int i);
+	void print(DuLinkList L);
+	void changeAllNum(DuLinkList L);
+	
+	DuLinkList head = Create_Dul();
+	head = FF(head, 10);
+	head = FF(head, 10);
+	head = FF(head, 5);
+	head = FF(head, 5);
+	Release(head, 3);
+	Release(head, 2);
+	print(head);
+//	ElemType c; c.full = 0; c.num = 1; c.size = 10;
+//	ElemType c1; c1.full = 0; c1.num = 2; c1.size = 20;
+//	ElemType c2; c2.full = 0; c2.num = 3; c2.size = 30;
+//	head = ListInsert_Dul(head, c);
+//	head = ListInsert_Dul(head, c1);
+//	head = ListInsert_Dul(head, c2);
+//	print(head);
+//	head = ListDelete_Dul(head, 1);
+//	print(head);
+//	changeAllNum(head);
+//	print(head);
+	
+	return 0;
+}
+
+
+/*void print(DuLinkList L) {		//打印所有存储区的当前状态 			不包含L空间大小 
+	printf("\n序号\t空间大小\t空闲状态（0空闲，1占用）\n");
+	DuLinkList p = L;
+	DuLinkList r = p->next;
+	while( p->next ){
+		printf("%d\t%d\t\t%d\n",r->data.num,r->data.size,r->data.full);
+		p = p->next;
+		r = p->next;
+	}
+}*/
+
+void print(DuLinkList L) {		//打印所有存储区的当前状态 			包含L空间大小 
+	printf("\n序号\t空间大小\t空闲状态（0空闲，1占用）\n");
+	DuLinkList p = L;
+	while( p ){
+		printf("%d\t%d\t\t%d\n",p->data.num,p->data.size,p->data.full);
+		p = p->next;
+	}
+} 
+
+void changeAllNum(DuLinkList L) {		//重新排一遍所有序号 
+	DuLinkList p = L;
+	int i = 0;
+	while( p ){
+		p->data.num = i;
+		p = p->next;
+		i++;
+	}
+}
+
+DuLinkList FF(DuLinkList L, int size) {		//输入的大小->size 
+	DuLinkList deptInsert(DuLinkList L, int i, int size);		//将i处的存储空间划分成后满、前空两部分 
+	void changeAllNum(DuLinkList L);
+	DuLinkList p = L;
+	bool find = false;
+	int i = 0;
+	while(p){
+		if( p->data.size>=size ){
+			if(p->data.size==size){
+				p->data.full = 1;
+			}else{
+				L = deptInsert(L, i, size);
+				changeAllNum(L);
+			}
+			find = true;
+			break;
+		}
+		p = p->next;
+		i++;
+	}
+	if( !find ){
+		printf("未找到合适的存储空间！\n");
+	}
+	return L;
+} 
+
+DuLinkList deptInsert(DuLinkList L, int i, int size) {
+	DuLinkList p = L;
+	int cha;
+	while( p->data.num!=i ){
+		p = p->next;
+	}
+	cha = p->data.size-size;
+	p->data.size = cha;
+	DuLinkList r;
+	r = (DuLinkList)malloc(sizeof(DuLnode));
+	r->data.full = 1;
+	r->data.size = size;
+	r->data.num = i+1;
+	if(p->next){
+		p->next->prior = r;	
+		r->next = p->next;
+		p->next = r;
+		r->prior = p;
+	}else{
+		p->next = r;
+		r->prior = p;
+		r->next = NULL;
+	}
+	return L;
+}
+
+DuLinkList Release(DuLinkList L, int i) {		//释放并合并空间 
+	DuLinkList ListDelete_Dul(DuLinkList L, int i);
+	void changeAllNum(DuLinkList L);
+	int temp_size;
+	DuLinkList p = L;
+	while(p){
+		if( p->data.num==i ){
+			temp_size = p->data.size;
+			break;
+		}
+		p = p->next;
+	}
+	if( p->prior->data.full==0 ){
+		p->prior->data.size += temp_size;
+		L = ListDelete_Dul(L, i);
+	}else if( p->next->data.full==0 ){
+		p->next->data.size += temp_size;
+		L = ListDelete_Dul(L, i);
+	}else{
+		p->data.full = 0;
+	}
+	
+	changeAllNum(L);
+	return L;
+}
+
+/*---------------------------以下是双向链表的基本算法-------------------------------*/
+
+DuLinkList Create_Dul() {		//建立一个空双向链表 
+	DuLinkList L;
+	L = (DuLinkList)malloc(sizeof(DuLnode));
+	L->prior = NULL;
+	L->next = NULL;
+	L->data.size = ALLSIZE;
+	L->data.full = 0;
+	L->data.num = 0;
+	return L;
+}
+
+DuLinkList ListInsert_Dul(DuLinkList L, ElemType x) {	/*在双向链表的尾部插入一个新元素x*/
+	DuLinkList p = L;
+	DuLinkList r;
+	while( p->next ){
+		p = p->next;
+	}
+	if( p==NULL ){
+		printf("出错！");
+		exit(1);
+	}
+	if( !(r=(DuLinkList)malloc(sizeof(DuLnode))) ){		//为新节点申请存储空间 
+		exit(1);		//存储分配失败，终止程序运行 
+	}
+	r->data = x;
+	p->next = r;
+	r->prior = p;
+	r->next = NULL;
+	return L;
+} 
+
+DuLinkList ListDelete_Dul(DuLinkList L, int i) {	/*删除双向链表中第i个数据元素*/
+	DuLinkList p;
+	int j;
+	p = L;
+	j = 0;
+	while( p!=NULL&&j<i ){
+		p = p->next;
+		j++;		//找第i个节点 
+	}
+	if( p==NULL||j>i ){
+		printf("参数i错");		//第i个节点不存在，不能插入 
+		exit(1); 
+	}else{
+		p->prior->next = p->next;
+		p->next->prior = p->prior;
+		free(p);		//释放节点空间 
+		return L;
+	}
+}
