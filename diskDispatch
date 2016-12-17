@@ -1,0 +1,156 @@
+操作系统实验：磁盘调度算法的实现  （此算法是用C语言实现的）
+
+实验内容：
+
+1．本实验是模拟操作系统的磁盘寻道方式，运用磁盘访问顺序的不同来设计磁盘的调度算法。
+
+2．实现的磁盘调度算法有FCFS，SSTF，SCAN，CSCAN和 NStepSCAN算法。
+
+3．设定开始磁道号寻道范围，依据起始扫描磁道号和最大磁道号数，随机产生要进行寻道的磁道号序列。
+
+4．选择磁盘调度算法，显示该算法的磁道访问顺序，计算出移动的磁道总数和平均寻道总数。
+
+5．按算法的寻道效率进行排序，并对各算法的性能进行分析比较。
+
+这个实验写的充满作业性质啊，我个人觉得函数的设计上马马虎虎的，虽然结果对了，但是逻辑上有点混乱= =但是作业嘛，你懂得~以后自己要编个软件的话会很认真哒~
+那一天赶紧来吧~
+
+#include <stdio.h>
+#include <math.h>
+#define END 200
+#define START 100
+int main() {
+	void print(int b[], int length);
+	void FCFS(int a[], int length);
+	void SSTF(int a[], int length);
+	void SCAN(int a[], int length);
+	void CSCAN(int a[],int length);
+	int abs(int i);
+	int a[9] = {55,58,39,18,90,160,150,38,184};
+	int length = sizeof(a)/sizeof(int);
+	
+	//FCFS(a, length);
+	//SSTF(a, length);
+	//SCAN(a, length);
+	CSCAN(a, length);
+	return 0;
+}
+
+void FCFS(int a[], int length) {
+	void print(int b[], int length);
+	printf("FCFS算法：");
+	print(a, length); 
+}
+
+void SSTF(int a[], int length) {	
+	void print(int b[], int length);
+	int abs(int i);
+	int s = START;
+	int b[length];
+	int len = length;
+	int temp = START;
+	int j = 0;
+	while( len>0 ){
+		int k;
+		int min = END;
+		for(int i=0; i<len; i++){
+			if( min>abs(temp-a[i]) ){
+				min = abs(temp-a[i]);
+				k = i;
+			}
+		}
+		temp = a[k];
+		b[j] = temp;
+		//printf("b[%d]=%d\n",j,b[j]);
+		j++;
+		for(int i=k; i<len; i++){
+			a[i] = a[i+1];
+		}
+		/*for(int i=0; i<len-1; i++){
+			printf("\nlen=%d\n",len);
+			printf("%d ",a[i]);
+		}*/
+		len--;
+	}
+	
+	printf("SSTF算法：");
+	print(b, length); 
+}
+
+void SCAN(int a[], int length) {
+	void sort(int array[],int n);
+	void print(int b[], int length);
+	sort(a, length);
+	int i = 0;
+	int temp;
+	while( a[i]<START ){
+		i++;
+	}
+	temp = i;
+	int b[length];
+	int j=0;
+	for(j=0; i<length; j++,i++){
+		b[j] = a[i];
+	}
+	for(i=temp-1; i>=0; j++,i--){
+		b[j] = a[i];
+	}
+	printf("SCAN算法：\n");
+	print(b,length);
+}
+
+void CSCAN(int a[],int length) {
+	void sort(int array[],int n);
+	void print(int b[], int length);
+	sort(a, length);
+	int i = 0;
+	int temp;
+	while( a[i]<START ){
+		i++;
+	}
+	temp = i;
+	int b[length];
+	int j=0;
+	for(j=0; i<length; j++,i++){
+		b[j] = a[i];
+	}
+	for(i=0; i<temp; j++,i++){
+		b[j] = a[i];
+	}
+	printf("CSCAN算法：\n");
+	print(b,length);
+}
+
+void print(int b[], int length) {
+	printf("从%d号磁道开始\n被访问的下一个磁道号\n",START);
+	for(int i = 0; i<length; i++){
+		printf("%d\n",b[i]);
+	}
+}
+
+int abs(int i) {
+	int result;
+	if(i>=0){
+		result = i;
+	}else{
+		result = -i;
+	}
+	return result;
+}
+
+void sort(int array[],int n){		//由小到大排序 
+	int i,j,t,k;
+	for(i=0;i<n-1;i++){
+		k=i;
+		for(j=i+1;j<n;j++){
+			if(array[k]>array[j]){
+				k=j;
+			}
+		}
+		if(k!=i){
+			t=array[k];
+			array[k]=array[i];
+			array[i]=t;
+		}
+	}
+}
